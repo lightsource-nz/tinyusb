@@ -201,6 +201,14 @@ typedef struct TU_ATTR_PACKED
     uint8_t  iElement;          \
  }
 
+typedef struct {
+  uint8_t bLength;
+  uint8_t bDescriptorType;
+  uint8_t bDescriptorSubType;
+  uint8_t bNumEmbMIDIJack;
+  uint8_t baAssocJackID[];
+} midi_desc_endpoint_t;
+
 /** @} */
 
 #ifdef __cplusplus
