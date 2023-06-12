@@ -199,13 +199,13 @@ static uint8_t get_index_by_endpoint(uint8_t dev_addr, uint8_t endpoint_addr)
 bool tuh_midi_packet_write(uint8_t dev_addr, uint8_t itf, uint8_t ep, uint8_t const event[4])
 {
   usbh_edpt_claim(dev_addr, ep);
-  return usbh_edpt_xfer_with_callback(dev_addr, ep, &event, 4, midih_xfer_cb, NULL);
+  return usbh_edpt_xfer_with_callback(dev_addr, ep, &event, 4, midih_xfer_cb, 0);
 }
 
 bool tuh_midi_packet_read(uint8_t dev_addr, uint8_t itf, uint8_t ep, uint8_t *buffer)
 {
   usbh_edpt_claim(dev_addr, ep);
-  return usbh_edpt_xfer_with_callback(dev_addr, ep, buffer, 4, midih_xfer_cb, NULL);
+  return usbh_edpt_xfer_with_callback(dev_addr, ep, buffer, 4, midih_xfer_cb, 0);
 }
 
 bool tuh_midi_mounted(uint8_t dev_addr, uint8_t itf_num)
@@ -324,6 +324,15 @@ static bool config_process_spec_v2_interface(midih_interface_t *itf, tusb_desc_i
 bool midih_open(uint8_t rhport, uint8_t dev_addr, tusb_desc_interface_t const *desc_itf, uint16_t max_len)
 {
   (void) rhport;
+  // first interface is either audio-control v1
+  // OR midi-streaming v2
+  TU_VERIFY (TUSB_CLASS_AUDIO == desc_itf->bInterfaceClass);
+  if(AUDIO_SUBCLASS_CONTROL == desc_itf->bInterfaceSubClass) {
+    desc_itf =(tusb_desc_interface_t const *) tu_desc_find2(desc_itf, (const uint8_t *)(desc_itf + max_len),
+                              TUSB_CLASS_AUDIO, AUDIO_SUBCLASS_MIDI_STREAMING);
+  }
+
+  TU_VERIFY (TUSB_CLASS_AUDIO == desc_itf->bInterfaceClass);
   TU_VERIFY (AUDIO_SUBCLASS_MIDI_STREAMING == desc_itf->bInterfaceSubClass);
 
   midi_desc_header_t *header = (midi_desc_header_t *) tu_desc_next(desc_itf);
