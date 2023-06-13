@@ -196,10 +196,10 @@ static uint8_t get_index_by_endpoint(uint8_t dev_addr, uint8_t endpoint_addr)
 // PUBLIC API
 //--------------------------------------------------------------------+
 
-bool tuh_midi_packet_write(uint8_t dev_addr, uint8_t itf, uint8_t ep, uint8_t const event[4])
+bool tuh_midi_packet_write(uint8_t dev_addr, uint8_t itf, uint8_t ep, uint8_t *event)
 {
   usbh_edpt_claim(dev_addr, ep);
-  return usbh_edpt_xfer_with_callback(dev_addr, ep, &event, 4, midih_xfer_cb, 0);
+  return usbh_edpt_xfer_with_callback(dev_addr, ep, event, 4, midih_xfer_cb, 0);
 }
 
 bool tuh_midi_packet_read(uint8_t dev_addr, uint8_t itf, uint8_t ep, uint8_t *buffer)
@@ -396,7 +396,8 @@ static bool config_process_spec_v1_interface(midih_interface_t *itf, tusb_desc_i
   desc = tu_desc_find(desc, (void *) desc_itf + max_len, TUSB_DESC_ENDPOINT);
   for(uint8_t i = 0; i < desc_itf->bNumEndpoints; i++) {
     TU_VERIFY(tu_desc_type(desc) == TUSB_DESC_ENDPOINT);
-    tusb_desc_endpoint_t *ep = (tusb_desc_endpoint_t *)desc;
+    const tusb_desc_endpoint_t *ep = (tusb_desc_endpoint_t *)desc;
+    TU_ASSERT(tuh_edpt_open(itf->dev_num, ep));
     desc = tu_desc_next(desc);
     midi_desc_endpoint_t *ep_cs = (midi_desc_endpoint_t *)desc;
     if(tu_edpt_dir(ep->bEndpointAddress) == TUSB_DIR_IN) {
@@ -440,13 +441,13 @@ static bool config_process_spec_v2_interface(midih_interface_t *itf, tusb_desc_i
 
 bool midih_set_config(uint8_t dev_addr, uint8_t itf_num)
 {
-  midih_interface_t* p_midi = get_itf(get_index(dev_addr, itf_num));
+  uint8_t index = get_index(dev_addr, itf_num);
+  midih_interface_t* p_midi = get_itf(index);
 
-  p_midi->configured = true;
+  tuh_midi_mount_cb(index);
 
-  tuh_midi_mount_cb(dev_addr);
-
-  usbh_driver_set_config_complete(dev_addr, itf_num);
+  // we return itf_num + 1 because midi driver binds 2 interfaces
+  usbh_driver_set_config_complete(dev_addr, itf_num + 1);
 
   return true;
 }

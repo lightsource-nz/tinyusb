@@ -102,7 +102,7 @@ typedef struct
 
 // Send a 32-bit MIDI event packet to specified output jack and interface
 // return true if success, false if there is already pending operation.
-bool tuh_midi_packet_write(uint8_t dev_addr, uint8_t itf, uint8_t ep, uint8_t const event[4]);
+bool tuh_midi_packet_write(uint8_t dev_addr, uint8_t itf, uint8_t ep, uint8_t *event);
 
 // Read a 32-bit MIDI event packet into the supplied buffer
 bool tuh_midi_packet_read(uint8_t dev_addr, uint8_t itf, uint8_t ep, uint8_t *buffer);
@@ -110,10 +110,10 @@ bool tuh_midi_packet_read(uint8_t dev_addr, uint8_t itf, uint8_t ep, uint8_t *bu
 //------------- Application Callback -------------//
 
 // Invoked when a device with MidiStreaming interface is mounted
-TU_ATTR_WEAK void tuh_midi_mount_cb(uint8_t dev_addr);
+TU_ATTR_WEAK void tuh_midi_mount_cb(uint8_t idx);
 
 // Invoked when a device with MidiStreaming interface is unmounted
-TU_ATTR_WEAK void tuh_midi_umount_cb(uint8_t dev_addr);
+TU_ATTR_WEAK void tuh_midi_umount_cb(uint8_t idx);
 
 //--------------------------------------------------------------------+
 // Internal Class Driver API
