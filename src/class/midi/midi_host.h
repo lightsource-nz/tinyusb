@@ -69,51 +69,54 @@ enum {
 
 // Check if device supports MidiStreaming interface.
 // This function true after tuh_midi_mounted_cb() and false after tuh_midi_unmounted_cb()
-bool tuh_midi_mounted(uint8_t dev_addr, uint8_t itf_num);
+bool tuh_midi_mounted(uint8_t index);
+
+uint8_t tuh_midi_get_in_endpoints(uint8_t index);
+uint8_t tuh_midi_get_out_endpoints(uint8_t index);
+bool tuh_midi_in_endpoint_ready(uint8_t index, uint8_t ep_idx);
+bool tuh_midi_out_endpoint_ready(uint8_t index, uint8_t ep_idx);
 
 // Check which version of the USB MIDI spec this interface supports
-uint8_t tuh_midi_spec_version(uint8_t dev_addr, uint8_t itf_num);
-
+uint8_t tuh_midi_spec_version(uint8_t index);
 bool tuh_midi_spec_version_supported(uint8_t spec);
 
 #ifdef MIDI_SPEC_1_0
-// Get number of virtual midi cables
-uint8_t tuh_midi_get_in_cables(uint8_t dev_addr, uint8_t itf_num);
-uint8_t tuh_midi_get_out_cables(uint8_t dev_addr, uint8_t itf_num);
-// select a cable by zero-based array index
-bool tuh_midi_in_ready(uint8_t dev_addr, uint8_t itf_num, uint8_t cable_id);
-bool tuh_midi_out_ready(uint8_t dev_addr, uint8_t itf_num, uint8_t cable_id);
-uint8_t tuh_midi_get_in_cable_id(uint8_t dev_addr, uint8_t itf_num, uint8_t index);
-uint8_t tuh_midi_get_out_cable_id(uint8_t dev_addr, uint8_t itf_num, uint8_t index);
-uint8_t tuh_midi_get_in_cable_endpoint(uint8_t dev_addr, uint8_t itf_num, uint8_t index);
-uint8_t tuh_midi_get_out_cable_endpoint(uint8_t dev_addr, uint8_t itf_num, uint8_t index);
-#endif
+uint8_t tuh_midi_v1_get_in_endpoint_jacks(uint8_t index, uint8_t ep_idx);
+uint8_t tuh_midi_v1_get_out_endpoint_jacks(uint8_t index, uint8_t ep_idx);
+uint8_t tuh_midi_v1_get_in_endpoint_jack_id(uint8_t index, uint8_t ep_idx, uint8_t cable_num);
+uint8_t tuh_midi_v1_get_out_endpoint_jack_id(uint8_t index, uint8_t ep_idx, uint8_t cable_num);
+// write multiple 32-bit MIDI event packets to the stream buffer of the given endpoint.
+// returns number of packets written to the buffer.
+uint16_t tuh_midi_v1_stream_n_write(uint8_t index, uint8_t ep_index, void const *data, uint16_t n);
+uint16_t tuh_midi_v1_stream_write(uint8_t index, void const *data, uint16_t n);
+
+uint16_t tuh_midi_v1_stream_n_out_available(uint8_t index, uint8_t ep_index);
+uint16_t tuh_midi_v1_stream_out_available(uint8_t index);
+void tuh_midi_v1_stream_out_n_flush(uint8_t index, uint8_t ep_index);
+void tuh_midi_v1_stream_out_n_flush_sync(uint8_t index, uint8_t ep_index);
+void tuh_midi_v1_stream_out_flush(uint8_t index);
+void tuh_midi_v1_stream_out_flush_sync(uint8_t index);
+
+// read 32-bit MIDI event packets out of the endpoint's stream buffer.
+// returns number of packets read out.   
+uint16_t tuh_midi_v1_stream_n_read(uint8_t index, uint8_t ep_index, void *data, uint16_t n);
+uint16_t tuh_midi_v1_stream_read(uint8_t index, void *data, uint16_t n);
+
+uint16_t tuh_midi_v1_stream_n_in_available(uint8_t index, uint8_t ep_index);
+uint16_t tuh_midi_v1_stream_in_available(uint8_t index);
+#endif 
 
 #ifdef MIDI_SPEC_2_0
-
-typedef struct
-{
-  unsigned endpoint_id:8;
-  unsigned block_id:8;
-  unsigned block_type:2;
-} m20_term_block_t;
-
+// spec-v2 API functions
 #endif
-
-// Send a 32-bit MIDI event packet to specified output jack and interface
-// return true if success, false if there is already pending operation.
-bool tuh_midi_packet_write(uint8_t dev_addr, uint8_t itf, uint8_t ep, uint8_t *event);
-
-// Read a 32-bit MIDI event packet into the supplied buffer
-bool tuh_midi_packet_read(uint8_t dev_addr, uint8_t itf, uint8_t ep, uint8_t *buffer);
 
 //------------- Application Callback -------------//
 
 // Invoked when a device with MidiStreaming interface is mounted
-TU_ATTR_WEAK void tuh_midi_mount_cb(uint8_t idx);
+TU_ATTR_WEAK void tuh_midi_mount_cb(uint8_t index);
 
 // Invoked when a device with MidiStreaming interface is unmounted
-TU_ATTR_WEAK void tuh_midi_umount_cb(uint8_t idx);
+TU_ATTR_WEAK void tuh_midi_umount_cb(uint8_t index);
 
 //--------------------------------------------------------------------+
 // Internal Class Driver API
